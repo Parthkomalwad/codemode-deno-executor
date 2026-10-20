@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="120" viewBox="0 0 520 120" role="img" aria-label="codemode-deno-executor">
+  <rect width="520" height="120" rx="16" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="519" height="119" rx="15.5" fill="none" stroke="#1e293b"/>
+  <g transform="translate(28 24)">
+    <rect width="72" height="72" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+    <path d="M27 22 L15 36 L27 50" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45 22 L57 36 L45 50" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="30" y="31" width="12" height="10" rx="2" fill="#e2e8f0"/>
+    <path d="M32 31 v-3 a4 4 0 0 1 8 0 v3" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+  </g>
+  <text x="124" y="58" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" font-weight="700" fill="#e2e8f0">codemode<tspan fill="#38bdf8">-deno-</tspan>executor</text>
+  <text x="124" y="86" font-family="ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" fill="#94a3b8">code mode, anywhere</text>
+</svg>

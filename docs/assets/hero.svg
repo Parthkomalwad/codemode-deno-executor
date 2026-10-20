@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" role="img" aria-label="The model writes code, the code runs in a Deno sandbox with every permission denied, codemode tool calls cross back to the host, and the result returns to the model.">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#38bdf8"/>
+    </marker>
+  </defs>
+  <rect width="900" height="300" rx="16" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="899" height="299" rx="15.5" fill="none" stroke="#1e293b"/>
+  <g font-family="ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+    <!-- 1. model -->
+    <rect x="30" y="70" width="170" height="120" rx="12" fill="#0f172a" stroke="#334155"/>
+    <text x="115" y="100" text-anchor="middle" font-size="13" fill="#94a3b8">1 · MODEL</text>
+    <text x="115" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="#e2e8f0">writes code</text>
+    <text x="115" y="160" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="12" fill="#38bdf8">async () =&gt; { … }</text>
+
+    <!-- 2. sandbox -->
+    <rect x="250" y="40" width="300" height="180" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+    <text x="400" y="70" text-anchor="middle" font-size="13" fill="#94a3b8">2 · DENO SANDBOX</text>
+    <text x="400" y="96" text-anchor="middle" font-size="16" font-weight="700" fill="#e2e8f0">all permissions denied</text>
+    <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="12">
+      <text x="275" y="128" fill="#f87171">✕ net</text>
+      <text x="345" y="128" fill="#f87171">✕ read</text>
+      <text x="420" y="128" fill="#f87171">✕ write</text>
+      <text x="495" y="128" fill="#f87171">✕ env</text>
+      <text x="275" y="150" fill="#f87171">✕ run</text>
+      <text x="345" y="150" fill="#f87171">✕ ffi</text>
+      <text x="420" y="150" fill="#f87171">✕ sys</text>
+      <text x="275" y="190" fill="#38bdf8">await codemode.getWeather(…)</text>
+    </g>
+
+    <!-- 3. host -->
+    <rect x="600" y="70" width="270" height="120" rx="12" fill="#0f172a" stroke="#334155"/>
+    <text x="735" y="100" text-anchor="middle" font-size="13" fill="#94a3b8">3 · YOUR HOST PROCESS</text>
+    <text x="735" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="#e2e8f0">runs the real tool</text>
+    <text x="735" y="160" text-anchor="middle" font-size="12" fill="#94a3b8">keys and env stay here</text>
+
+    <!-- arrows -->
+    <line x1="200" y1="130" x2="246" y2="130" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="550" y1="176" x2="596" y2="150" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="596" y1="110" x2="554" y2="96" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+    <text x="573" y="208" text-anchor="middle" font-size="11" fill="#94a3b8">call</text>
+    <text x="575" y="84" text-anchor="middle" font-size="11" fill="#94a3b8">ret</text>
+
+    <!-- 4. result -->
+    <path d="M400 220 V262 H115 V194" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="258" y="282" text-anchor="middle" font-size="13" fill="#e2e8f0">4 · result + logs as JSON</text>
+  </g>
+</svg>
