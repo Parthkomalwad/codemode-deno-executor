@@ -2,6 +2,13 @@
   "name": "codemode-deno-executor",
   "version": "0.1.0",
   "description": "Run Cloudflare Code Mode anywhere: a sandboxed Deno executor for @cloudflare/codemode",
+  "author": "Parth Komalwad",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Parthkomalwad/codemode-deno-executor.git"
+  },
+  "homepage": "https://github.com/Parthkomalwad/codemode-deno-executor#readme",
+  "bugs": "https://github.com/Parthkomalwad/codemode-deno-executor/issues",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,20 +18,36 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "runner"],
+  "files": [
+    "dist",
+    "runner"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "npm run build && npm run typecheck && node --test test/*.test.mjs"
   },
-  "keywords": ["codemode", "code-mode", "mcp", "cloudflare", "deno", "sandbox", "agents", "llm"],
+  "keywords": [
+    "codemode",
+    "code-mode",
+    "mcp",
+    "cloudflare",
+    "deno",
+    "sandbox",
+    "agents",
+    "llm"
+  ],
   "license": "MIT",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "peerDependencies": {
     "@cloudflare/codemode": ">=0.5.0"
   },
   "peerDependenciesMeta": {
-    "@cloudflare/codemode": { "optional": true }
+    "@cloudflare/codemode": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@cloudflare/codemode": "^0.5.5",
