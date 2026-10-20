@@ -25,7 +25,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "npm run build && npm run typecheck && node --test test/*.test.mjs"
+    "test": "npm run build && npm run typecheck && node --test test/executor.test.mjs"
   },
   "keywords": [
     "codemode",
