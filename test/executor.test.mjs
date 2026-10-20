@@ -238,3 +238,148 @@ describe("drop-in use with @cloudflare/codemode", () => {
     assert.deepEqual(out.logs, ["Lisbon"]);
   });
 });
+
+describe("protocol edge cases", () => {
+  const tricky = "line1\nline2\r\n   \"quotes\" \ café 日本 🚀👍🏽";
+
+  it("round-trips newlines, unicode and emoji through args, results and logs", async () => {
+    let received;
+    const r = await run(
+      `async () => { const s = ${JSON.stringify(tricky)}; console.log(s); return await codemode.echo({ s }); }`,
+      codemode({ echo: async ({ s }) => ((received = s), s + "!") }),
+    );
+    assert.equal(r.error, undefined);
+    assert.equal(received, tricky);
+    assert.equal(r.result, tricky + "!");
+    assert.deepEqual(r.logs, [tricky]);
+  });
+
+  it("passes undefined tool results through", async () => {
+    const r = await run(
+      "async () => (await codemode.nothing()) === undefined",
+      codemode({ nothing: async () => undefined }),
+    );
+    assert.equal(r.result, true);
+  });
+
+  it("surfaces tools that throw non-Error values", async () => {
+    const r = await run(
+      "async () => { const out = []; for (const t of ['str', 'num', 'weird']) { try { await codemode[t](); } catch (e) { out.push(e.message); } } return out; }",
+      codemode({
+        str: async () => { throw "plain string"; },
+        num: async () => { throw 42; },
+        weird: async () => { throw Object.create(null); },
+      }),
+    );
+    assert.deepEqual(r.result, ["plain string", "42", "Unknown error"]);
+  });
+
+  it("times out when a tool never resolves", async () => {
+    const fast = new DenoExecutor({ timeout: 1_000 });
+    const r = await run("async () => codemode.hang()", codemode({ hang: () => new Promise(() => {}) }), fast);
+    assert.equal(r.error, "Execution timed out");
+  });
+
+  it("does not expose Object.prototype methods as tools", async () => {
+    for (const name of ["constructor", "toString", "hasOwnProperty", "__proto__"]) {
+      const r = await run(`async () => codemode[${JSON.stringify(name)}]()`, codemode({}));
+      assert.equal(r.error, `Tool "${name}" not found`, name);
+    }
+  });
+
+  it("survives malformed protocol lines written from inside the sandbox", async () => {
+    const lines = ["null", "42", "[1]", '{"t":"log","line":{"toString":1,"valueOf":1}}', '{"t":"call","id":1,"ns":{},"tool":[]}', "{not json"];
+    const src = `const e = new TextEncoder(); for (const l of ${JSON.stringify(lines)}) Deno.stdout.writeSync(e.encode(l + String.fromCharCode(10)));`;
+    const crashes = [];
+    const onCrash = (err) => crashes.push(err.message);
+    process.on("uncaughtException", onCrash);
+    try {
+      const r = await run(
+        `async () => { new Worker("data:text/javascript," + encodeURIComponent(${JSON.stringify(src)}), { type: "module" }); await new Promise((r) => setTimeout(r, 500)); return "alive"; }`,
+      );
+      assert.equal(r.result, "alive");
+    } finally {
+      process.off("uncaughtException", onCrash);
+    }
+    assert.deepEqual(crashes, []);
+  });
+});
+
+describe("escape attempts", () => {
+  it("does not let a Worker gain permissions", async () => {
+    const src = `try { Deno.readTextFileSync("/etc/hosts"); postMessage("READ"); } catch (e) { postMessage(e.name); }`;
+    const r = await run(
+      `async () => { const w = new Worker("data:text/javascript," + encodeURIComponent(${JSON.stringify(src)}), { type: "module" }); return await new Promise((r) => (w.onmessage = (e) => r(e.data))); }`,
+    );
+    assert.equal(r.result, "NotCapable");
+  });
+
+  it("kills a spinning Worker at the timeout", async () => {
+    const fast = new DenoExecutor({ timeout: 1_000 });
+    const start = Date.now();
+    const r = await run(
+      `async () => { new Worker("data:text/javascript," + encodeURIComponent("while (true) {}"), { type: "module" }); await new Promise(() => {}); }`,
+      [],
+      fast,
+    );
+    assert.equal(r.error, "Execution timed out");
+    assert.ok(Date.now() - start < 3_000);
+  });
+
+  it("kills an infinite loop inside WebAssembly", async () => {
+    const fast = new DenoExecutor({ timeout: 1_000 });
+    // (module (func (export "f") (loop (br 0))))
+    const bytes = [0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 9, 1, 7, 0, 3, 64, 12, 0, 11, 11];
+    const r = await run(
+      `async () => { const { instance } = await WebAssembly.instantiate(new Uint8Array(${JSON.stringify(bytes)})); instance.exports.f(); }`,
+      [],
+      fast,
+    );
+    assert.equal(r.error, "Execution timed out");
+  });
+
+  it("kills Atomics.wait on a SharedArrayBuffer", async () => {
+    const fast = new DenoExecutor({ timeout: 1_000 });
+    const r = await run("async () => { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0); }", [], fast);
+    assert.equal(r.error, "Execution timed out");
+  });
+
+  it("reports deep recursion as an error", async () => {
+    const r = await run("async () => { const f = (n) => f(n + 1) + 1; return f(0); }");
+    assert.match(r.error, /call stack/i);
+  });
+
+  it("hides Deno from globalThis, Function('return this') and import.meta", async () => {
+    const r = await run(
+      "async () => [typeof globalThis.Deno, typeof Function('return this')().Deno, import.meta.url.startsWith('data:'), typeof import.meta.resolve]",
+    );
+    assert.deepEqual(r.result, ["undefined", "undefined", true, "function"]);
+  });
+
+  it("cannot read the environment through the process global", async () => {
+    const r = await run("async () => { try { return typeof process.env.PATH; } catch (e) { return 'blocked'; } }");
+    assert.notEqual(r.result, "string");
+  });
+});
+
+describe("options", () => {
+  it("maps allowNet hosts to --allow-net=", () => {
+    const args = new DenoExecutor({ allowNet: ["example.com", "api.github.com:443"] }).denoArgs;
+    assert.ok(args.includes("--allow-net=example.com,api.github.com:443"));
+    assert.ok(!args.includes("--deny-net"));
+    assert.ok(new DenoExecutor().denoArgs.includes("--deny-net"));
+    assert.ok(new DenoExecutor({ allowNet: [] }).denoArgs.includes("--deny-net"));
+    assert.ok(new DenoExecutor({ allowNet: true }).denoArgs.includes("--allow-net"));
+  });
+
+  it("allows a result just under maxOutputBytes and stops one just over", async () => {
+    const max = 10_000;
+    const overhead = Buffer.byteLength('{"t":"done","result":""}\n');
+    const ex = new DenoExecutor({ maxOutputBytes: max });
+    const under = await run(`async () => "x".repeat(${max - overhead})`, [], ex);
+    assert.equal(under.error, undefined);
+    assert.equal(under.result.length, max - overhead);
+    const over = await run(`async () => "x".repeat(${max - overhead + 1})`, [], ex);
+    assert.match(over.error, /output exceeded 10000 bytes/);
+  });
+});

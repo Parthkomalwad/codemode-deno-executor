@@ -72,7 +72,14 @@ export function sanitizeToolName(name: string): string {
   return sanitized;
 }
 
-const errorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  try {
+    return String(err);
+  } catch {
+    return "Unknown error";
+  }
+}
 
 type Prepared = { providers: ResolvedProvider[] } | { error: string };
 
@@ -90,7 +97,8 @@ function prepareProviders(providersOrFns: ResolvedProvider[] | Record<string, To
     if (seen.has(provider.name)) return { error: `Duplicate provider name "${provider.name}"` };
     seen.add(provider.name);
 
-    const fns: Record<string, ToolFn> = {};
+    // Null prototype: tool lookups must never reach Object.prototype methods.
+    const fns: Record<string, ToolFn> = Object.create(null);
     const originalNames = new Map<string, string>();
     for (const [name, fn] of Object.entries(provider.fns)) {
       const sanitized = sanitizeToolName(name);
@@ -222,8 +230,9 @@ export class DenoExecutor implements Executor {
       };
 
       const dispatch = async (id: number, ns: string, tool: string, args: unknown) => {
-        const fn = byName.get(ns)?.[tool];
-        if (!fn) return send({ t: "ret", id, error: `Tool "${tool}" not found` });
+        const fns = byName.get(ns);
+        const fn = fns && Object.hasOwn(fns, tool) ? fns[tool] : undefined;
+        if (typeof fn !== "function") return send({ t: "ret", id, error: `Tool "${tool}" not found` });
         try {
           const value = await fn(...(Array.isArray(args) ? args : [args]));
           let result: unknown;
@@ -267,14 +276,19 @@ export class DenoExecutor implements Executor {
         while ((newline = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, newline);
           buffer = buffer.slice(newline + 1);
+          // Sandboxed code can write to stdout too (e.g. from a Worker), so
+          // treat every line as untrusted: malformed input must not throw here.
           let message: any;
           try {
             message = JSON.parse(line);
           } catch {
             continue;
           }
-          if (message.t === "log") logs.push(String(message.line));
-          else if (message.t === "call") void dispatch(message.id, message.ns, message.tool, message.args);
+          if (message === null || typeof message !== "object") continue;
+          if (message.t === "log") logs.push(typeof message.line === "string" ? message.line : JSON.stringify(message.line));
+          else if (message.t === "call" && typeof message.ns === "string" && typeof message.tool === "string") {
+            void dispatch(message.id, message.ns, message.tool, message.args);
+          }
           else if (message.t === "done") {
             settle(
               typeof message.error === "string"
@@ -285,7 +299,8 @@ export class DenoExecutor implements Executor {
         }
       });
 
-      child.on("exit", (exitCode, signal) => {
+      // "close", not "exit": stdout may still hold the final "done" line when "exit" fires.
+      child.on("close", (exitCode, signal) => {
         if (settled) return;
         const detail = stderr.trim().split("\n").slice(-3).join("\n");
         const outOfMemory = /out of memory|heap limit/i.test(stderr);
