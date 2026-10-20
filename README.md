@@ -5,6 +5,7 @@
 ### Run Cloudflare Code Mode anywhere. A locked-down Deno sandbox for LLM-generated code.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Parthkomalwad/codemode-deno-executor/ci.yml?branch=main&style=flat-square&label=CI&color=0f172a&logo=github&logoColor=38bdf8)](https://github.com/Parthkomalwad/codemode-deno-executor/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/codemode-deno-executor?style=flat-square&color=0f172a&logo=npm&logoColor=38bdf8)](https://www.npmjs.com/package/codemode-deno-executor)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f172a?style=flat-square&logoColor=38bdf8)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/node-20%2B-0f172a?style=flat-square&logo=nodedotjs&logoColor=38bdf8)](package.json)
 [![Deno 2](https://img.shields.io/badge/deno-2-0f172a?style=flat-square&logo=deno&logoColor=38bdf8)](https://deno.com)
