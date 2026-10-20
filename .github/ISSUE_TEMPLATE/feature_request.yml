@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a capability or improvement
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or impossible today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The API or behaviour you want. A code sample helps.
+    validations:
+      required: true
+  - type: dropdown
+    id: upstream
+    attributes:
+      label: Does this change behaviour that should match upstream @cloudflare/codemode?
+      options: ["No", "Yes, and I have described the difference above"]
+    validations:
+      required: true
+  - type: dropdown
+    id: sandbox
+    attributes:
+      label: Does this loosen the sandbox (permissions, limits, what crosses the boundary)?
+      options: ["No", "Yes, and I have described the threat model change above"]
+    validations:
+      required: true

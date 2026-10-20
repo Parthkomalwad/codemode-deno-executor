@@ -1,0 +1,47 @@
+name: Bug report
+description: The executor misbehaved, crashed, or differs from upstream Code Mode executors
+labels: ["bug", "triage"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: codemode-deno-executor version or commit
+      placeholder: 0.1.0 or git sha
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Versions
+      description: Output of `node --version`, `deno --version` (first line), and your @cloudflare/codemode version.
+      placeholder: "node v22.11.0, deno 2.5.0, @cloudflare/codemode 0.5.5"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options: ["Linux", "macOS", "Windows", "Other"]
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The generated code, the providers you passed, and the executor options.
+      render: js
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Security
+      options:
+        - label: This is NOT a security issue (otherwise follow SECURITY.md instead of filing here)
+          required: true
